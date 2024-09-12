@@ -41,7 +41,7 @@ app.use('/images', express.static('uploads/images'));
 app.post('/upload', upload.single('businessImage'), (req, res) => {
   res.json({
     message: 'Success',
-    imageUrl: `http://localhost:${PORT}/images/${req.file.filename}`,
+    imageUrl: `https://mrovabizbackend.onrender.com/images/${req.file.filename}`,
   });
 });
 
