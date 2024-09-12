@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const path = require('path');
 
+const PORT = process.env.PORT || 5001;
 const connectDB = require('./config/dbConnection');
 connectDB();
 
@@ -17,8 +18,6 @@ app.use(express.urlencoded({ extended: false }));
 
 const corsOptions = require('./config/corsOptions');
 app.use(cors(corsOptions));
-
-const port = process.env.PORT || 5001;
 
 app.use(express.json());
 app.use(cookieParser());
@@ -42,7 +41,7 @@ app.use('/images', express.static('uploads/images'));
 app.post('/upload', upload.single('businessImage'), (req, res) => {
   res.json({
     message: 'Success',
-    imageUrl: `http://localhost:${port}/images/${req.file.filename}`,
+    imageUrl: `http://localhost:${PORT}/images/${req.file.filename}`,
   });
 });
 
@@ -61,6 +60,6 @@ app.all('*', (req, res) => {
 mongoose.connection.once('open', () => {
   console.log('Database connected');
   app.listen(port, (req, res) =>
-    console.log(`Server running on port: ${port}`)
+    console.log(`Server running on port: ${PORT}`)
   );
 });
