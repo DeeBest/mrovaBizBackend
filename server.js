@@ -5,7 +5,16 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const multer = require('multer');
-const path = require('path');
+const multerS3 = require('multer-s3');
+const { S3Client } = require('@aws-sdk/client-s3');
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION, // e.g., 'us-east-1'
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 const PORT = process.env.PORT || 5001;
 const connectDB = require('./config/dbConnection');
@@ -22,27 +31,25 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
-//creating upload storage
-const storage = multer.diskStorage({
-  destination: './uploads/images',
-  filename: (req, file, cb) => {
-    return cb(
-      null,
-      `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'mrovabizimages',
+    contentType: multerS3.AUTO_CONTENT_TYPE, // Automatically set the content type based on the file
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: (req, file, cb) => {
+      cb(null, `${Date.now()}_${file.originalname}`);
+    },
+  }),
 });
 
-const upload = multer({ storage: storage });
-
-app.use('/images', express.static('uploads/images'));
-
-//endpoint for uploading images
+// Upload endpoint
 app.post('/upload', upload.single('businessImage'), (req, res) => {
-  console.log(`Uploaded file: ${req.file.path}`); // Logs the file path
   res.json({
     message: 'Success',
-    imageUrl: `https://mrovabizbackend.onrender.com/images/${req.file.filename}`,
+    imageUrl: req.file.location, // S3 URL of the uploaded image
   });
 });
 
@@ -60,7 +67,5 @@ app.all('*', (req, res) => {
 
 mongoose.connection.once('open', () => {
   console.log('Database connected');
-  app.listen(PORT, (req, res) =>
-    console.log(`Server running on port: ${PORT}`)
-  );
+  app.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
 });
