@@ -42,7 +42,7 @@ app.post('/upload', upload.single('businessImage'), (req, res) => {
   console.log(`Uploaded file: ${req.file.path}`); // Logs the file path
   res.json({
     message: 'Success',
-    imageUrl: `/images/${req.file.filename}`,
+    imageUrl: `https://mrovabizbackend.onrender.com/images/${req.file.filename}`,
   });
 });
 
